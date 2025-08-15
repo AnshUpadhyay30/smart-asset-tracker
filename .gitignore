@@ -1,8 +1,32 @@
+# Byte-compiled / optimized / DLL files
 __pycache__/
-*.pyc
-.env
-uploads/
-*.sqlite3
-*.log
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+venv/
+ENV/
+env/
+
+# Flask-related
 instance/
+uploads/
+*.log
+
+# Environment & secrets
+.env
+
+# Database & data exports
+*.sqlite3
 *.csv
+
+# OS & editor files
+.DS_Store
+*.swp
+*.swo
+
+# PyInstaller
+dist/
+build/
+*.spec
