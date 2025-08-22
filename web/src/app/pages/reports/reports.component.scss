@@ -1,0 +1,99 @@
+/* ===== Layout ===== */
+.reports {
+  --ink-1:#0f172a; --ink-2:#475569; --ink-3:#94a3b8;
+  --brand:#2563eb; --ring:rgba(37,99,235,.18);
+  --panel: #ffffff; --panel-bd:#e9edf5; --panel-shadow: 0 12px 28px rgba(2,6,23,.08);
+
+  padding: clamp(16px, 3vw, 28px);
+  display: grid; gap: 18px;
+}
+
+/* Breadcrumb */
+.crumb {
+  font-size: 13px; color: var(--ink-3);
+  display: flex; align-items: center; gap: .4rem;
+  .brand { color: var(--brand); font-weight: 700; }
+  .page  { color: var(--ink-1); font-weight: 600; }
+  .sep   { opacity: .6; }
+}
+
+/* Header */
+.header {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  .title { display: grid; gap: 4px; }
+  h2 { margin: 0; font-size: clamp(20px, 2.2vw, 28px); color: var(--ink-1); }
+  .subtitle { margin: 0; color: var(--ink-3); }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+}
+
+/* Export buttons — polished outline, no harsh border */
+.btn-hd {
+  border-radius: 12px; font-weight: 700; letter-spacing: .2px;
+  display: inline-flex; align-items: center; gap: 8px;
+  border: 1px solid var(--panel-bd);
+  background: #fff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, .06), inset 0 1px 0 rgba(255,255,255,.6);
+  transition: box-shadow .2s ease, transform .06s ease, border-color .2s ease;
+  mat-icon { font-size: 18px; }
+
+  &:hover { box-shadow: 0 10px 24px rgba(15, 23, 42, .09); border-color:#d8dde8; }
+  &:active { transform: translateY(1px); }
+}
+.btn-hd.alt { border-color:#e7e9f2; }
+
+/* Panels — remove double-outline feel */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-bd);
+  border-radius: 16px;
+  box-shadow: var(--panel-shadow);
+  overflow: hidden;
+}
+.panel-head {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--panel-bd);
+  h3 { margin: 0; font-size: clamp(18px, 2vw, 22px); color: var(--ink-1); }
+  .filters { display: flex; gap: 8px; }
+  .small { width: 160px; }
+}
+/* inner surface */
+.panel-body { padding: 14px 16px; }
+.panel-body.no-border { padding-top: 6px; border-top: 0; }
+
+/* Chart area — clean grid, no extra border */
+.chart-wrap {
+  position: relative;
+  width: 100%;
+  height: 360px;
+  canvas { display:block; }
+}
+
+/* Table */
+.table-wrap {
+  overflow: auto; max-height: 60vh; border-radius: 10px;
+  table {
+    width: 100%;
+    th { background: #f7f9ff; font-weight: 600; color: var(--ink-2); }
+    td { white-space: nowrap; color: var(--ink-1); }
+  }
+}
+
+/* Badges & states */
+.badge { display:inline-flex; align-items:center; padding:4px 10px; border-radius:999px;
+  font-size:12px; font-weight:600; }
+.badge.danger { background:#fde6e6; color:#b42318; }
+
+.empty { text-align:center; color:#6b7280; padding: 18px 8px; font-style: italic;
+  mat-icon { font-size: 40px; height: 40px; width: 40px; color:#9ca3af; } }
+
+.error {
+  color:#b42318; background:#fde6e6; border:1px solid #f0b3b3;
+  padding:8px 10px; border-radius: 10px; margin: 8px 16px 10px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .panel-head { flex-direction: column; align-items: flex-start; }
+  .small { width: 100%; }
+}

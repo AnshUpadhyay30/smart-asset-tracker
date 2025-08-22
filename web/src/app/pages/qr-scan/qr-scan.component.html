@@ -1,0 +1,119 @@
+<div class="qr-page" role="application" aria-label="QR scanner">
+  <!-- Breadcrumb -->
+  <div class="crumb">
+    <span class="brand">SmartAsset</span>
+    <span class="sep">›</span>
+    <span class="page">QR Scan</span>
+  </div>
+
+  <!-- Top bar -->
+  <header class="head">
+    <div class="title">
+      <div class="glyph" aria-hidden="true"><mat-icon>qr_code_scanner</mat-icon></div>
+      <div class="stack">
+        <h2 aria-label="QR Scan">QR Scan</h2>
+        <small class="sub">Point the camera at a QR or choose an image.</small>
+      </div>
+    </div>
+
+    <div class="right">
+      <!-- Camera picker -->
+      <mat-form-field appearance="outline" class="devpick" *ngIf="devices.length">
+        <mat-label>Camera</mat-label>
+        <mat-select [(ngModel)]="currentDevice">
+          <mat-option *ngFor="let d of devices" [value]="d">
+            {{ d.label || 'Camera' }}
+          </mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <!-- Reset -->
+      <button mat-stroked-button class="btn-outline" (click)="clear()" matTooltip="Clear last result">
+        <mat-icon>refresh</mat-icon>
+        <span>Reset</span>
+      </button>
+
+      <!-- Primary “Scan from image” -->
+      <label class="btn-primary" mat-flat-button color="primary">
+        <mat-icon>image</mat-icon>
+        <span>Scan from image</span>
+        <input type="file" accept="image/*" (change)="onFile($event)" hidden />
+      </label>
+    </div>
+  </header>
+
+  <!-- Permission / status -->
+  <div class="status" *ngIf="hasPermission() === false">
+    Camera permission denied. Please allow camera access.
+  </div>
+
+  <!-- Scanner Panel -->
+  <section class="panel">
+    <div class="panel-body no-top-pad">
+      <div class="scanner">
+        <zxing-scanner
+          [formats]="formats"
+          [device]="currentDevice!"
+          [torch]="torchOn()"
+          (permissionResponse)="onScanPermission($event)"
+          (camerasFound)="onCamerasFound($event)"
+          (scanSuccess)="onCodeResult($event)"
+          (torchCompatible)="onTorchCompatible($event)">
+        </zxing-scanner>
+
+        <!-- Overlay UI -->
+        <div class="overlay" aria-hidden="true">
+          <div class="frame"></div>
+
+          <div class="toolbelt">
+            <button
+              mat-fab
+              color="primary"
+              *ngIf="torchAvailable()"
+              (click)="toggleTorch()"
+              [matTooltip]="torchOn() ? 'Torch off' : 'Torch on'">
+              <mat-icon>{{ torchOn() ? 'flashlight_off' : 'flashlight_on' }}</mat-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Result -->
+  <section class="panel">
+    <div class="panel-head">
+      <h3>Scan Result</h3>
+    </div>
+
+    <div class="panel-body">
+      <mat-progress-bar *ngIf="loadingAsset()" mode="indeterminate"></mat-progress-bar>
+      <div class="err" *ngIf="error()">{{ error() }}</div>
+
+      <mat-card *ngIf="asset" class="asset-card mat-elevation-z2">
+        <mat-card-title>{{ asset.name }}</mat-card-title>
+        <mat-card-subtitle>{{ asset.category }} • {{ asset.location }}</mat-card-subtitle>
+        <mat-card-content>
+          <div class="rows">
+            <div><b>Purchase:</b> {{ asset.purchase_date || '—' }}</div>
+            <div><b>Warranty End:</b> {{ asset.warranty_end || '—' }}</div>
+            <div><b>Assigned User ID:</b> {{ asset.assigned_user_id || '—' }}</div>
+          </div>
+
+          <img
+            *ngIf="asset.qr_code_path"
+            [src]="qrUrl(asset.qr_code_path)"
+            (error)="onQrImgError($event)"
+            alt="QR code for this asset"
+            class="qr-img"
+            width="160"
+            height="160" />
+        </mat-card-content>
+      </mat-card>
+
+      <div class="last" *ngIf="lastText()">
+        <b>Raw QR:</b> {{ lastText() }}
+      </div>
+    </div>
+  </section>
+</div>

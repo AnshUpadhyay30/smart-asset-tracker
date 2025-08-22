@@ -1,0 +1,17 @@
+<h2 mat-dialog-title class="cd-title">
+    <span class="glyph" aria-hidden="true"><mat-icon>warning_amber</mat-icon></span>
+    <span>{{ data.title || 'Confirm' }}</span>
+  </h2>
+  
+  <mat-dialog-content class="cd-body">
+    <p>{{ data.message || 'Are you sure?' }}</p>
+  </mat-dialog-content>
+  
+  <mat-dialog-actions align="end" class="cd-actions">
+    <button mat-button class="btn-cancel" (click)="onNo()">
+      {{ data.cancelText || 'Cancel' }}
+    </button>
+    <button mat-flat-button color="warn" class="btn-delete" (click)="onYes()">
+      {{ data.okText || 'Delete' }}
+    </button>
+  </mat-dialog-actions>

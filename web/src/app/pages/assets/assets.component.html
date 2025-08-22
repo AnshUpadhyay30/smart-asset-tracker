@@ -1,0 +1,186 @@
+<!-- Ultra-clean, responsive assets page -->
+<div class="assets-shell">
+
+  <!-- Breadcrumb + actions -->
+  <header class="hdr">
+    <div class="crumb">
+      <span class="brand">SmartAsset</span>
+      <span class="sep">›</span>
+      <span class="page">Assets</span>
+    </div>
+
+    <div class="actions">
+      <button mat-stroked-button class="btn-outline" (click)="exportCSV()" matTooltip="Export visible rows to CSV" type="button">
+        <mat-icon>download</mat-icon>
+        <span>Export</span>
+      </button>
+
+      <button
+        mat-flat-button
+        color="primary"
+        class="btn-primary"
+        (click)="openAddAssetDialog()"
+        *ngIf="isManagerOrAdmin()"
+        type="button">
+        <mat-icon>add</mat-icon>
+        <span>Add Asset</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Page title -->
+  <div class="title-row">
+    <div class="title">
+      <span class="glyph" aria-hidden="true"><mat-icon>inventory_2</mat-icon></span>
+      <div class="stack">
+        <h2>Assets</h2>
+        <p class="muted">Manage and track all company assets</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <section class="filters">
+    <mat-form-field appearance="outline" class="f search">
+      <mat-label>Search assets</mat-label>
+      <input
+        id="asset-search"
+        matInput
+        placeholder="Name, category, location…"
+        (input)="applyQuickFilter($any($event.target).value)" />
+      <mat-icon matSuffix>search</mat-icon>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="f">
+      <mat-label>Category</mat-label>
+      <mat-select [(value)]="selectedCategory" (valueChange)="onFilterChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let c of categories" [value]="c">{{ c }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="f">
+      <mat-label>Location</mat-label>
+      <mat-select [(value)]="selectedLocation" (valueChange)="onFilterChange()">
+        <mat-option value="">All</mat-option>
+        <mat-option *ngFor="let l of locations" [value]="l">{{ l }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <button mat-button class="clear" (click)="clearFilters()" type="button">
+      <mat-icon>close</mat-icon>
+      <span>Clear</span>
+    </button>
+  </section>
+
+  <mat-divider class="divider"></mat-divider>
+
+  <!-- Loading -->
+  <mat-progress-bar *ngIf="loading" mode="indeterminate"></mat-progress-bar>
+
+  <!-- Table -->
+  <section class="table-card" *ngIf="dataSource.data.length; else noAssets">
+    <div class="table-scroller">
+      <table
+        mat-table
+        [dataSource]="dataSource"
+        [trackBy]="trackById"
+        matSort
+        class="mat-elevation-z1 grid-table">
+
+        <!-- Name -->
+        <ng-container matColumnDef="name">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="sticky">Name</th>
+          <td mat-cell *matCellDef="let row">
+            <div class="primary">{{ row.name }}</div>
+            <div class="secondary hide-desktop">{{ row.category }} • {{ row.location }}</div>
+          </td>
+        </ng-container>
+
+        <!-- Category -->
+        <ng-container matColumnDef="category">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="sticky">Category</th>
+          <td mat-cell *matCellDef="let row">{{ row.category }}</td>
+        </ng-container>
+
+        <!-- Location -->
+        <ng-container matColumnDef="location">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="sticky">Location</th>
+          <td mat-cell *matCellDef="let row">{{ row.location }}</td>
+        </ng-container>
+
+        <!-- Purchase Date -->
+        <ng-container matColumnDef="purchase_date">
+          <th mat-header-cell *matHeaderCellDef mat-sort-header class="sticky">Purchase&nbsp;Date</th>
+          <td mat-cell *matCellDef="let row">{{ formatDate(row.purchase_date) }}</td>
+        </ng-container>
+
+        <!-- Actions -->
+        <ng-container matColumnDef="actions">
+          <th mat-header-cell *matHeaderCellDef class="sticky center col-actions">Actions</th>
+          <td mat-cell *matCellDef="let row" class="actions col-actions">
+            <!-- Edit -->
+            <button
+              mat-icon-button
+              color="primary"
+              matTooltip="Edit"
+              type="button"
+              (click)="$event.stopPropagation(); editAsset(row)"
+              *ngIf="isManagerOrAdmin()">
+              <mat-icon>edit</mat-icon>
+            </button>
+
+            <!-- Delete -->
+            <button
+              mat-icon-button
+              color="warn"
+              matTooltip="Delete"
+              type="button"
+              (click)="$event.stopPropagation(); deleteAsset(row.id)"
+              *ngIf="isAdmin()">
+              <mat-icon>delete</mat-icon>
+            </button>
+
+            <!-- QR -->
+            <a
+              *ngIf="hasQr(row); else qrDisabled"
+              class="icon-link"
+              mat-icon-button
+              color="accent"
+              matTooltip="Download QR"
+              [href]="qrHref(row)"
+              download
+              (click)="$event.stopPropagation();">
+              <mat-icon>qr_code</mat-icon>
+            </a>
+            <ng-template #qrDisabled>
+              <button mat-icon-button disabled matTooltip="No QR yet" type="button">
+                <mat-icon>qr_code</mat-icon>
+              </button>
+            </ng-template>
+          </td>
+        </ng-container>
+
+        <!-- Rows -->
+        <tr mat-header-row *matHeaderRowDef="displayedColumns" class="thead"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns" class="trow"></tr>
+      </table>
+    </div>
+
+    <!-- Paginator -->
+    <mat-paginator
+      [pageSize]="10"
+      [pageSizeOptions]="[10, 25, 50, 100]"
+      showFirstLastButtons>
+    </mat-paginator>
+  </section>
+
+  <!-- Empty -->
+  <ng-template #noAssets>
+    <div class="empty">
+      <div class="emoji" aria-hidden="true">📦</div>
+      <p>No assets found.</p>
+      <p *ngIf="isManagerOrAdmin()">Use <b>Add Asset</b> to create your first record.</p>
+    </div>
+  </ng-template>
+</div>

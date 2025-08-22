@@ -1,0 +1,97 @@
+<!-- Login page: two panels horizontally on a white background -->
+<div class="login-wrapper">
+  <div class="login-card">
+    <!-- ───────── Left: brand / visuals ───────── -->
+    <aside class="brand" aria-labelledby="brandLogo">
+      <div class="brand-inner">
+        <!-- Main logo -->
+        <img
+          id="brandLogo"
+          class="brand-logo"
+          src="assets/images/smart_assest.png"
+          alt="SmartAsset"
+          decoding="async"
+        />
+
+        <p class="brand-sub">Track, maintain &amp; report — beautifully.</p>
+
+        <!-- Optional mascots/icons -->
+        <div class="logo-row" aria-hidden="true">
+          <img src="assets/images/logo-smartasset-1.svg" alt="" />
+          <img src="assets/images/logo-smartasset-2.svg" alt="" />
+        </div>
+      </div>
+    </aside>
+
+    <!-- ───────── Right: auth form ───────── -->
+    <section class="auth" aria-labelledby="authTitle">
+      <header class="welcome welcome--compact">
+        <h2 id="authTitle">Access your workspace</h2>
+        <p>Sign in to continue to SmartAsset.</p>
+      </header>
+
+      <!-- fixed width column ensures ALL controls align identically -->
+      <form
+        [formGroup]="loginForm"
+        (ngSubmit)="onSubmit()"
+        novalidate
+        class="auth-form form-rail"
+      >
+        <!-- Email -->
+        <mat-form-field appearance="outline" class="field field--xl">
+          <mat-label>Email address*</mat-label>
+          <input matInput type="email" formControlName="email" required />
+          <mat-icon matSuffix class="icon-muted" aria-hidden="true">mail</mat-icon>
+          <mat-error *ngIf="loginForm.get('email')?.hasError('required')">Email is required</mat-error>
+          <mat-error *ngIf="loginForm.get('email')?.hasError('email')">Enter a valid email</mat-error>
+        </mat-form-field>
+
+        <!-- Password -->
+        <mat-form-field appearance="outline" class="field field--xl">
+          <mat-label>Password*</mat-label>
+          <input
+            matInput
+            [type]="showPassword() ? 'text' : 'password'"
+            formControlName="password"
+            required
+          />
+          <button
+            mat-icon-button
+            type="button"
+            matSuffix
+            class="icon-btn"
+            aria-label="Toggle password visibility"
+            (click)="showPassword.set(!showPassword())">
+            <mat-icon class="icon-muted">{{ showPassword() ? 'visibility_off' : 'visibility' }}</mat-icon>
+          </button>
+          <mat-error *ngIf="loginForm.get('password')?.hasError('required')">Password is required</mat-error>
+        </mat-form-field>
+
+        <!-- Remember only -->
+        <div class="row rail-item">
+          <mat-checkbox formControlName="remember">Remember for 30 days</mat-checkbox>
+        </div>
+
+        <!-- Premium, wider sign-in button -->
+        <button
+          class="cta cta--pro cta--wide rail-item"
+          mat-flat-button
+          color="primary"
+          type="submit"
+          [disabled]="loginForm.invalid || loading()">
+          <mat-progress-spinner
+            *ngIf="loading()"
+            mode="indeterminate"
+            diameter="18"
+            aria-hidden="true"></mat-progress-spinner>
+          <span *ngIf="!loading()">Sign in</span>
+        </button>
+
+        <!-- Tip centered under button -->
+        <p class="hint rail-item">
+          Tip: use <code>admin&#64;example.com</code> / <code>Admin&#64;123</code> (seed)
+        </p>
+      </form>
+    </section>
+  </div>
+</div>

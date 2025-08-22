@@ -1,0 +1,46 @@
+:host { display: block; }
+
+.cd-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+
+  .glyph {
+    width: 36px; height: 36px;
+    display: grid; place-items: center;
+    border-radius: 10px;
+    color: #fff;
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    box-shadow: 0 8px 18px rgba(239, 68, 68, .28);
+    mat-icon { font-size: 20px; }
+  }
+}
+
+.cd-body {
+  p { margin: 8px 0 0; color: #475569; line-height: 1.45; }
+}
+
+.cd-actions {
+  padding-top: 6px;
+
+  .btn-cancel {
+    font-weight: 600;
+    color: #475569;
+    border-radius: 10px;
+  }
+
+  .btn-delete {
+    border-radius: 12px;
+    font-weight: 800;
+    letter-spacing: .2px;
+    padding: 8px 18px;
+    background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%) !important;
+    box-shadow:
+      0 10px 24px rgba(239, 68, 68, .25),
+      inset 0 1px 0 rgba(255,255,255,.28);
+    transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+    &:hover  { filter: saturate(1.05); }
+    &:active { transform: translateY(1px); }
+  }
+}

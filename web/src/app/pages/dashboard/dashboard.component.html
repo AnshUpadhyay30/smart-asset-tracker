@@ -1,0 +1,82 @@
+<!-- Top header / breadcrumb + action -->
+<div class="dash-header">
+  <div class="path">
+    <span class="app">SmartAsset</span>
+    <span class="sep">›</span>
+    <span class="page">Dashboard Overview</span>
+  </div>
+
+  <button class="btn btn-primary" (click)="exportSnapshot()">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M12 3v12m0 0l-4-4m4 4l4-4M4 21h16"
+            stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round" />
+    </svg>
+    Export Snapshot
+  </button>
+</div>
+
+<!-- 👇 Everything inside here will be exported as a PNG -->
+<div class="dashboard-container" #snapshotRoot>
+  <h2>📊 Dashboard Overview</h2>
+
+  <!-- Summary Cards -->
+  <div class="summary-cards">
+    <div class="card total">
+      <div class="icon">✓</div>
+      <div class="stats">
+        <h3>{{ summary?.total_assets || 0 }}</h3>
+        <p>Total Assets</p>
+      </div>
+    </div>
+
+    <div class="card logs">
+      <div class="icon">▦</div>
+      <div class="stats">
+        <h3>{{ summary?.total_logs || 0 }}</h3>
+        <p>Maintenance Logs</p>
+      </div>
+    </div>
+
+    <div class="card overdue">
+      <div class="icon warn">!</div>
+      <div class="stats">
+        <h3>{{ summary?.overdue_logs || 0 }}</h3>
+        <p>Overdue Logs</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Content Grid: chart + table -->
+  <div class="content-grid">
+    <div class="chart-section">
+      <div class="section-head">
+        <h3>📈 Monthly Maintenance Cost</h3>
+        <div class="legend-dot">Service Cost (₹)</div>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="costChart"></canvas>
+      </div>
+    </div>
+
+    <div class="table-section" *ngIf="dataSource?.data?.length">
+      <h3>📋 Monthly Cost Table</h3>
+      <table mat-table [dataSource]="dataSource" class="mat-elevation-z2">
+        <!-- Month -->
+        <ng-container matColumnDef="month">
+          <th mat-header-cell *matHeaderCellDef>Month</th>
+          <td mat-cell *matCellDef="let row">{{ row.month }}</td>
+        </ng-container>
+
+        <!-- Cost -->
+        <ng-container matColumnDef="cost">
+          <th mat-header-cell *matHeaderCellDef>Cost (₹)</th>
+          <td mat-cell *matCellDef="let row">{{ row.cost }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+      </table>
+    </div>
+  </div>
+</div>

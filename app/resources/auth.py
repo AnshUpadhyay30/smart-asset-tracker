@@ -1,68 +1,136 @@
 # app/resources/auth.py
+"""
+Auth routes:
+- POST /api/auth/register         (admin-only in real deployments; open here for dev)
+- POST /api/auth/login            → returns JWT + role + first-login flags
+- POST /api/auth/change-password  → requires JWT (used on first login)
+- GET  /api/auth/me               → current user profile from JWT
+"""
+
 from flask import Blueprint, request, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_cors import cross_origin
 from app import db
-from app.models import User
+from app.models import User  # imports User from app/models/user.py
 
 auth_bp = Blueprint("auth", __name__)
 
-# ----------------------------
-# User Registration
-# ----------------------------
-@auth_bp.post("/register")
-def register():
-    data = request.get_json() or {}
-    name = data.get("name")
-    email = data.get("email")
-    password = data.get("password")
-    role = data.get("role", "TECH")  # default TECH if not given
+# ---------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------
+def _json():
+    """Safely parse JSON body (never returns None)."""
+    return request.get_json(silent=True) or {}
 
-    if not all([name, email, password]):
+# ---------------------------------------------------------------------
+# Register (dev only). In production, keep this ADMIN-only or remove.
+# ---------------------------------------------------------------------
+@auth_bp.route("/register", methods=["POST", "OPTIONS"])
+@cross_origin(origins="http://localhost:4200", supports_credentials=True)
+def register():
+    # Handle preflight
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
+
+    data = _json()
+    name = (data.get("name") or "").strip()
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+    role = (data.get("role") or "TECH").upper()  # for dev convenience
+
+    if not name or not email or not password:
         return jsonify({"error": "name/email/password required"}), 400
 
     if User.query.filter_by(email=email).first():
         return jsonify({"error": "email already exists"}), 400
 
-    u = User(
+    user = User(
         name=name,
         email=email,
         role=role,
-        password_hash=generate_password_hash(password)
+        is_active=True,
+        must_change_password=False,  # dev default; can set True if you want forced reset
+        password_hash=generate_password_hash(password),
     )
-    db.session.add(u)
+    db.session.add(user)
     db.session.commit()
+    return jsonify({"message": "registered"}), 201
 
-    return {"message": "registered"}, 201
-
-
-# ----------------------------
-# User Login
-# ----------------------------
-@auth_bp.post("/login")
+# ---------------------------------------------------------------------
+# Login
+# ---------------------------------------------------------------------
+@auth_bp.route("/login", methods=["POST", "OPTIONS"])
+@cross_origin(origins="http://localhost:4200", supports_credentials=True)
 def login():
-    data = request.get_json() or {}
-    email = data.get("email")
-    password = data.get("password")
+    # Handle preflight
+    if request.method == "OPTIONS":
+        return jsonify({"ok": True}), 200
 
-    if not all([email, password]):
+    data = _json()
+    email = (data.get("email") or "").strip().lower()
+    password = data.get("password") or ""
+
+    if not email or not password:
         return jsonify({"error": "email/password required"}), 400
 
-    u = User.query.filter_by(email=email).first()
-
-    if not u or not check_password_hash(u.password_hash, password):
+    user = User.query.filter_by(email=email).first()
+    if not user or not check_password_hash(user.password_hash, password):
         return jsonify({"error": "invalid credentials"}), 401
 
-    # FIX: Convert identity to string to avoid "Subject must be a string" error
-    token = create_access_token(identity=str(u.id), additional_claims={"role": u.role})
+    if not getattr(user, "is_active", True):
+        return jsonify({"error": "account disabled"}), 403
 
-    return {"access_token": token, "role": u.role}
+    token = create_access_token(
+        identity=str(user.id),  # store user id as string in JWT
+        additional_claims={"role": user.role},
+    )
 
+    return jsonify({
+        "access_token": token,
+        "role": user.role,
+        "must_change_password": getattr(user, "must_change_password", False),
+        "is_active": getattr(user, "is_active", True),
+        "name": user.name,
+        "email": user.email,
+    }), 200
 
-"""
-Note:
-When you later retrieve the identity from the token:
+# ---------------------------------------------------------------------
+# Change password (used on first login / profile screen)
+# ---------------------------------------------------------------------
+@auth_bp.post("/change-password")
+@jwt_required()
+def change_password():
+    uid = int(get_jwt_identity())
+    data = _json()
+    new_pass = data.get("new_password") or ""
 
-from flask_jwt_extended import get_jwt_identity
-user_id = int(get_jwt_identity())  # convert back to int if needed
-"""
+    # simple policy – adjust as needed
+    if len(new_pass) < 8:
+        return jsonify({"error": "min 8 characters required"}), 400
+
+    user = User.query.get_or_404(uid)
+    user.password_hash = generate_password_hash(new_pass)
+    # stop forcing password reset after a successful change
+    if hasattr(user, "must_change_password"):
+        user.must_change_password = False
+
+    db.session.commit()
+    return jsonify({"message": "password updated"}), 200
+
+# ---------------------------------------------------------------------
+# Current user profile (handy for the app header)
+# ---------------------------------------------------------------------
+@auth_bp.get("/me")
+@jwt_required()
+def me():
+    uid = int(get_jwt_identity())
+    user = User.query.get_or_404(uid)
+    return jsonify({
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "role": user.role,
+        "is_active": getattr(user, "is_active", True),
+        "must_change_password": getattr(user, "must_change_password", False),
+    }), 200

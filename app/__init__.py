@@ -7,34 +7,50 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 from sqlalchemy import text
-from .config import Config  # Load configuration from .env
 
-# ✅ Initialize extensions
+from .config import Config
+
 db = SQLAlchemy()
 migrate = Migrate()
 jwt = JWTManager()
 
-# ⛔ Avoid circular imports by importing models after initializing extensions
 from . import models  # noqa: E402
 
-def create_app():
+
+def create_app() -> Flask:
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    # ✅ Logging setup (ensure logs show in all environments)
     logging.basicConfig(level=logging.INFO)
 
-    # ✅ Enable CORS for frontend-backend API calls
-    CORS(app)
+    # ✅ CORS: Angular dev (http://localhost:4200) → Flask API (/api/*)
+    CORS(
+        app,
+        resources={r"/api/*": {"origins": ["http://localhost:4200"]}},
+        supports_credentials=False,  # cookies use नहीं कर रहे तो False
+        methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+        allow_headers=["Content-Type", "Authorization"],
+        expose_headers=["Content-Type", "Authorization"],
+        max_age=86400,
+    )
 
-    # ✅ Initialize Flask extensions
+    # ✅ Fallback so even error/401/404 responses carry CORS headers
+    @app.after_request
+    def _cors_fallback(resp):
+        # origin vary handling
+        resp.headers.setdefault("Vary", "Origin")
+        # अगर flask-cors ने पहले से सेट नहीं किया, तो setdefault इसे जोड़ देगा
+        resp.headers.setdefault("Access-Control-Allow-Origin", "http://localhost:4200")
+        resp.headers.setdefault("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS")
+        resp.headers.setdefault("Access-Control-Allow-Headers", "Authorization, Content-Type")
+        return resp
+
+    # ---------- extensions ----------
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
 
-    # ─────────────────────────────────────────────────────────────
-    # 🟢 Health check endpoints (basic monitoring and testing)
-    # ─────────────────────────────────────────────────────────────
+    # ---------- health ----------
     @app.get("/")
     def index():
         return {"message": "Smart Asset API is running. Hit /health for status."}
@@ -42,7 +58,7 @@ def create_app():
     @app.get("/health")
     def health():
         try:
-            db.session.execute(text("SELECT 1"))  # DB connection check
+            db.session.execute(text("SELECT 1"))
             db_ok = True
         except Exception:
             db_ok = False
@@ -52,34 +68,36 @@ def create_app():
     def favicon():
         return ("", 204)
 
-    # ─────────────────────────────────────────────────────────────
-    # 🧪 Manual trigger for daily summary (for testing purposes)
-    # ─────────────────────────────────────────────────────────────
     @app.get("/trigger-summary")
     def trigger_summary():
-        """Manually trigger maintenance summary (used in dev testing)"""
         from app.scheduler import send_due_summary
         send_due_summary()
         return {"message": "Summary triggered manually"}
 
-    # ─────────────────────────────────────────────────────────────
-    # 🔗 Register all API Blueprints (modular routing)
-    # ─────────────────────────────────────────────────────────────
-    from app.resources.auth import auth_bp                     # 🔐 Login/Register
-    from app.resources.maintenance import maintenance_bp       # 🛠️ Maintenance logs
-    from app.routes.asset_routes import asset_bp               # 🧾 Asset CRUD
-    from app.resources.uploads import upload_bp                # 📤 File upload/download
-    from app.resources.report_routes import report_bp          # 📊 Reports & CSV export
+    # ---------- blueprints ----------
+    from app.resources.auth import auth_bp
+    from app.resources.maintenance import maintenance_bp
+    from app.routes.asset_routes import asset_bp
+    from app.resources.uploads import upload_bp
+    from app.resources.report_routes import report_bp
+    from app.resources.dashboard import dashboard_bp
+    from app.resources.qr_public import qr_public_bp
+    from app.resources.admin_users import admin_users_bp
 
     app.register_blueprint(auth_bp, url_prefix="/api/auth")
     app.register_blueprint(maintenance_bp, url_prefix="/api")
-    app.register_blueprint(asset_bp, url_prefix="/api/assets")
-    app.register_blueprint(upload_bp, url_prefix="/api")
-    app.register_blueprint(report_bp, url_prefix="/api")
+    app.register_blueprint(asset_bp,        url_prefix="/api/assets")
+    app.register_blueprint(upload_bp,       url_prefix="/api")
+    app.register_blueprint(report_bp,       url_prefix="/api")
+    app.register_blueprint(dashboard_bp,    url_prefix="/api/assets")
+    app.register_blueprint(qr_public_bp,    url_prefix="/api")
+    app.register_blueprint(admin_users_bp,  url_prefix="/api")
 
-    # ─────────────────────────────────────────────────────────────
-    # ⏰ Start APScheduler if enabled in .env
-    # ─────────────────────────────────────────────────────────────
+    # (Optional) Preflight catch-all — rarely needed, but safe:
+    @app.route("/api/<path:_any>", methods=["OPTIONS"])
+    def _preflight(_any):
+        return ("", 204)
+
     if app.config.get("ENABLE_SCHEDULER"):
         from app.scheduler import start_scheduler
         start_scheduler(app)

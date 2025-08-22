@@ -1,0 +1,114 @@
+<div class="reports" role="main" aria-label="Reports">
+  <!-- Breadcrumb -->
+  <div class="crumb">
+    <span class="brand">SmartAsset</span>
+    <span class="sep">›</span>
+    <span class="page">Reports</span>
+  </div>
+
+  <!-- Header + actions -->
+  <header class="header">
+    <div class="title">
+      <h2>📊 Reports</h2>
+      <p class="subtitle">Insights &amp; exports for assets and maintenance</p>
+    </div>
+
+    <div class="actions">
+      <button
+        mat-stroked-button
+        class="btn-hd"
+        (click)="downloadAssetsCsv()"
+        aria-label="Export Assets CSV">
+        <mat-icon>download</mat-icon>
+        <span>Export Assets CSV</span>
+      </button>
+
+      <button
+        mat-stroked-button
+        class="btn-hd alt"
+        (click)="downloadLogsCsv()"
+        aria-label="Export Logs CSV">
+        <mat-icon>download</mat-icon>
+        <span>Export Logs CSV</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Monthly cost chart -->
+  <section class="panel">
+    <div class="panel-head">
+      <h3>Monthly Maintenance Cost</h3>
+    </div>
+
+    <mat-progress-bar *ngIf="loadingCost()" mode="indeterminate"></mat-progress-bar>
+    <div class="error" *ngIf="errorCost()">{{ errorCost() }}</div>
+
+    <!-- inner surface WITHOUT extra border to avoid double outline -->
+    <div class="panel-body no-border">
+      <div class="chart-wrap">
+        <canvas
+          baseChart
+          [type]="'bar'"
+          [data]="chartData"
+          [options]="chartOptions"
+          aria-label="Monthly maintenance cost chart">
+        </canvas>
+      </div>
+    </div>
+  </section>
+
+  <!-- Warranty expiring -->
+  <section class="panel">
+    <div class="panel-head">
+      <h3>Warranty Expiring Soon</h3>
+
+      <div class="filters">
+        <mat-form-field appearance="outline" class="small">
+          <mat-label>Within (days)</mat-label>
+          <mat-select
+            [value]="selectedDays()"
+            (valueChange)="onDaysChange($event)"
+            aria-label="Select days window">
+            <mat-option *ngFor="let d of daysOptions" [value]="d">{{ d }}</mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+    </div>
+
+    <mat-progress-bar *ngIf="loadingWarranty()" mode="indeterminate"></mat-progress-bar>
+    <div class="error" *ngIf="errorWarranty()">{{ errorWarranty() }}</div>
+
+    <div class="panel-body">
+      <div class="table-wrap" *ngIf="expiring.length; else noData">
+        <table mat-table [dataSource]="expiring" class="mat-elevation-z1 ultra-table">
+          <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>Asset</th>
+            <td mat-cell *matCellDef="let r">{{ r.name }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="category">
+            <th mat-header-cell *matHeaderCellDef>Category</th>
+            <td mat-cell *matCellDef="let r">{{ r.category }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="warranty_end">
+            <th mat-header-cell *matHeaderCellDef>Warranty Ends</th>
+            <td mat-cell *matCellDef="let r">
+              <span class="badge danger" matTooltip="Expiring soon">{{ r.warranty_end }}</span>
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="displayed; sticky: true"></tr>
+          <tr mat-row *matRowDef="let row; columns: displayed;"></tr>
+        </table>
+      </div>
+
+      <ng-template #noData>
+        <div class="empty">
+          <mat-icon aria-hidden="true">event_busy</mat-icon>
+          <div>No warranties expiring in next {{ selectedDays() }} days.</div>
+        </div>
+      </ng-template>
+    </div>
+  </section>
+</div>

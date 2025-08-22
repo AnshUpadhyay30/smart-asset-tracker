@@ -1,0 +1,25 @@
+<svg width="640" height="640" viewBox="0 0 640 640" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="SmartAsset abstract logo">
+  <defs>
+    <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#8B5CF6"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22C55E"/>
+      <stop offset="1" stop-color="#16A34A"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="10" stdDeviation="12" flood-color="rgba(2,6,23,.25)"/>
+    </filter>
+  </defs>
+
+  <!-- stacked tiles forming subtle S -->
+  <g filter="url(#shadow)">
+    <rect x="120" y="120" rx="28" ry="28" width="240" height="160" fill="url(#g1)"/>
+    <rect x="280" y="240" rx="28" ry="28" width="240" height="160" fill="url(#g2)"/>
+    <rect x="120" y="360" rx="28" ry="28" width="240" height="160" fill="url(#g1)" opacity=".9"/>
+  </g>
+
+  <!-- check/tick -->
+  <path d="M448 208l-132 132-64-64" fill="none" stroke="#ffffff" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

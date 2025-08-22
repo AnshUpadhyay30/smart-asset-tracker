@@ -1,0 +1,42 @@
+<!-- Title -->
+<h2 mat-dialog-title class="dlg-title">
+  <span class="title-glyph" aria-hidden="true">
+    <mat-icon>inventory_2</mat-icon>
+  </span>
+  <span>{{ isEdit ? 'Edit Asset' : 'Add New Asset' }}</span>
+</h2>
+
+<!-- Content -->
+<mat-dialog-content [formGroup]="form" class="dialog-body">
+  <p class="dlg-sub">Please fill all required fields below.</p>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Name*</mat-label>
+    <input matInput formControlName="name" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Category*</mat-label>
+    <input matInput formControlName="category" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Location*</mat-label>
+    <input matInput formControlName="location" />
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="full-width">
+    <mat-label>Purchase Date*</mat-label>
+    <input matInput [matDatepicker]="picker" formControlName="purchase_date" />
+    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+    <mat-datepicker #picker></mat-datepicker>
+  </mat-form-field>
+</mat-dialog-content>
+
+<!-- Actions -->
+<mat-dialog-actions align="end" class="dialog-actions">
+  <button mat-button mat-dialog-close class="btn-ghost">Cancel</button>
+  <button mat-flat-button color="primary" class="btn-primary" (click)="save()">
+    {{ isEdit ? 'Save' : 'Add' }}
+  </button>
+</mat-dialog-actions>

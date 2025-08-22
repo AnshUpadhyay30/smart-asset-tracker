@@ -30,3 +30,7 @@ uploads/
 dist/
 build/
 *.spec
+
+# Angular / Node
+node_modules/
+dist/
